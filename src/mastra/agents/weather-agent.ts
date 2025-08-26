@@ -1,12 +1,11 @@
-// import { openai } from '@ai-sdk/openai';
-import { createOpenRouter } from "@openrouter/ai-sdk-provider";
 import { Agent } from "@mastra/core/agent";
-import { Memory } from "@mastra/memory";
 import { LibSQLStore } from "@mastra/libsql";
+import { Memory } from "@mastra/memory";
+import { createOpenRouter } from "@openrouter/ai-sdk-provider";
 import { weatherTool } from "../tools/weather-tool";
 
 const openrouter = createOpenRouter({
-	apiKey: process.env.OPENROUTER_API_KEY!,
+	apiKey: process.env.OPENROUTER_API_KEY,
 });
 
 export const weatherAgent = new Agent({
