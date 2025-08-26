@@ -142,3 +142,8 @@ vite.config.ts.timestamp-*
 .mastra
 *.db
 *.db-*
+
+# Claude Code
+.claude
+.mcp.json
+CLAUDE.md
