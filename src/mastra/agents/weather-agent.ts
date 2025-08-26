@@ -1,17 +1,17 @@
 // import { openai } from '@ai-sdk/openai';
-import { createOpenRouter } from '@openrouter/ai-sdk-provider';
-import { Agent } from '@mastra/core/agent';
-import { Memory } from '@mastra/memory';
-import { LibSQLStore } from '@mastra/libsql';
-import { weatherTool } from '../tools/weather-tool';
+import { createOpenRouter } from "@openrouter/ai-sdk-provider";
+import { Agent } from "@mastra/core/agent";
+import { Memory } from "@mastra/memory";
+import { LibSQLStore } from "@mastra/libsql";
+import { weatherTool } from "../tools/weather-tool";
 
 const openrouter = createOpenRouter({
-  apiKey: process.env.OPENROUTER_API_KEY!,
-})
+	apiKey: process.env.OPENROUTER_API_KEY!,
+});
 
 export const weatherAgent = new Agent({
-  name: 'Weather Agent',
-  instructions: `
+	name: "Weather Agent",
+	instructions: `
       You are a helpful weather assistant that provides accurate weather information and can help planning activities based on the weather.
 
       Your primary function is to help users get weather details for specific locations. When responding:
@@ -25,11 +25,11 @@ export const weatherAgent = new Agent({
 
       Use the weatherTool to fetch current weather data.
 `,
-  model: openrouter('qwen/qwen3-235b-a22b-2507'),
-  tools: { weatherTool },
-  memory: new Memory({
-    storage: new LibSQLStore({
-      url: 'file:../mastra.db', // path is relative to the .mastra/output directory
-    }),
-  }),
+	model: openrouter("qwen/qwen3-235b-a22b-2507"),
+	tools: { weatherTool },
+	memory: new Memory({
+		storage: new LibSQLStore({
+			url: "file:../mastra.db", // path is relative to the .mastra/output directory
+		}),
+	}),
 });
