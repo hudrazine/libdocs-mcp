@@ -1,1 +1,1 @@
-# libdocs-mcp
+# LibDocs MCP Server
