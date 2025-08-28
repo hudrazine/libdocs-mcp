@@ -1,15 +1,13 @@
 import { Agent } from "@mastra/core/agent";
 import { LibSQLStore } from "@mastra/libsql";
 import { Memory } from "@mastra/memory";
-import { createOpenRouter } from "@openrouter/ai-sdk-provider";
+import { openrouter } from "../provider";
 import { weatherTool } from "../tools/weather-tool";
-
-const openrouter = createOpenRouter({
-	apiKey: process.env.OPENROUTER_API_KEY,
-});
 
 export const weatherAgent = new Agent({
 	name: "Weather Agent",
+	description:
+		"An agent that provides weather information and helps plan activities based on the weather.",
 	instructions: `
       You are a helpful weather assistant that provides accurate weather information and can help planning activities based on the weather.
 
