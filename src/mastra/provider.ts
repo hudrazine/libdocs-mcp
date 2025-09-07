@@ -7,4 +7,8 @@ if (!OPENROUTER_API_KEY) {
 
 export const openrouter = createOpenRouter({
 	apiKey: OPENROUTER_API_KEY,
+	headers: {
+		"HTTP-Referer": "https://github.com/hudrazine/libdocs-mcp",
+		"X-Title": "LibDocs MCP",
+	},
 });
