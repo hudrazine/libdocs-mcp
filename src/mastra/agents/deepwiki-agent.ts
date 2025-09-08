@@ -176,7 +176,7 @@ export const DeepWikiAgent = new Agent({
 	name: "DeepWiki Agent",
 	id: "deepwiki-agent",
 	description:
-		"Autonomous GitHub repository analysis agent that leverages DeepWiki's AI-powered documentation system to provide deep insights, answer technical questions, and explain implementation patterns with intelligent caching and retry logic.",
+		"GitHub repository analysis specialist that provides deep technical insights through AI-powered documentation generation. Best suited for: understanding repository architecture, analyzing code patterns, explaining implementation details, answering codebase-specific questions, and exploring design decisions. Automatically discovers repositories via search when needed. Choose this agent for source code understanding and repository-level technical questions rather than official library docs or general web research.",
 	instructions: async () => {
 		return SYSTEM_PROMPT + getDateContext();
 	},

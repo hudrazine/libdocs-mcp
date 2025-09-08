@@ -131,7 +131,7 @@ export const Context7Agent = new Agent({
 	name: "Context7 Agent",
 	id: "context7-agent",
 	description:
-		"Autonomous documentation retrieval agent that resolves library queries to Context7 IDs, fetches relevant technical documentation with intelligent retry logic, and presents content in structured Markdown format with comprehensive error handling.",
+		"Specialized agent for retrieving official documentation from a curated database of published libraries and frameworks. Best suited for: NPM packages, PyPI modules, official API references, SDK documentation, version-specific guides, and authoritative library documentation. Uses intelligent caching and handles specialized documentation API requirements. Choose this agent when users need official, published library documentation rather than source code analysis or general web content.",
 	instructions: async () => {
 		return SYSTEM_PROMPT + getDateContext();
 	},

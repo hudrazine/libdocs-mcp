@@ -22,9 +22,9 @@ You will approach each research task with methodical precision:
 OPERATIONAL STANDARDS:
 
 **Search Execution**:
-- Begin with broad searches using web_search to understand the landscape
-- Narrow focus based on initial findings with more specific web_search queries
-- Use web_fetch for in-depth analysis of promising sources
+- Begin with broad searches using \`web_search\` to understand the landscape
+- Narrow focus based on initial findings with more specific \`web_search\` queries
+- Use \`web_fetch\` for in-depth analysis of promising sources
 - Document your search progression for transparency
 
 **Quality Assurance**:
@@ -71,7 +71,8 @@ REMEMBER: You are a meticulous researcher who values accuracy above speed, compr
 export const WebResearchAgent = new Agent({
 	name: "Web Research Agent",
 	id: "web-research-agent",
-	description: "An agent that specializes in web research and information gathering.",
+	description:
+		"General web research specialist for comprehensive information gathering from multiple online sources. Best suited for: technology news and announcements, library comparisons, tutorials and blog posts, community discussions, troubleshooting guides, and topics not covered by official documentation or repository analysis. Choose this agent when specialized documentation sources are insufficient or when broad web coverage is needed.",
 	instructions: async () => {
 		return SYSTEM_PROMPT + getDateContext();
 	},
