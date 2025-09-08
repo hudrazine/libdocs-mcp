@@ -8,7 +8,7 @@
 		"build": "mastra build",
 		"build:mcp": "tsdown",
 		"start": "mastra start",
-		"inspector": "pnpm run build:mcp && pnpm dlx @modelcontextprotocol/inspector node dist/index.js",
+		"inspector": "pnpm run build:mcp && dotenvx run -- pnpm dlx @modelcontextprotocol/inspector node dist/index.js",
 		"lint": "pnpm exec biome lint --write",
 		"format": "pnpm exec biome format --write"
 	},
@@ -35,6 +35,7 @@
 	},
 	"devDependencies": {
 		"@biomejs/biome": "2.2.2",
+		"@dotenvx/dotenvx": "^1.49.0",
 		"@types/node": "^24.3.1",
 		"lefthook": "^1.12.3",
 		"mastra": "^0.12.0",
