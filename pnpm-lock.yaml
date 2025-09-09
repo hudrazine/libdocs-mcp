@@ -38,6 +38,9 @@ importers:
       pino:
         specifier: ^9.9.4
         version: 9.9.4
+      pino-pretty:
+        specifier: ^13.1.1
+        version: 13.1.1
       zod:
         specifier: ^4.1.5
         version: 4.1.5
