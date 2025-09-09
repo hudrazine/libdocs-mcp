@@ -14,7 +14,7 @@ export const mastra = new Mastra({
 		url: ":memory:",
 	}),
 	logger: new PinoLogger({
-		name: "Mastra",
+		name: "LibDocs MCP",
 		level: "info",
 		// Log to stderr because stdio-based MCP servers occupy stdout
 		overrideDefaultTransports: true,
