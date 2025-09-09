@@ -5,10 +5,9 @@
 	"main": "dist/index.js",
 	"scripts": {
 		"dev": "mastra dev",
-		"build": "mastra build",
-		"build:mcp": "tsdown",
+		"build": "tsdown",
 		"start": "mastra start",
-		"inspector": "pnpm run build:mcp && dotenvx run -- pnpm dlx @modelcontextprotocol/inspector node dist/index.js",
+		"inspector": "pnpm run build && dotenvx run -- pnpm dlx @modelcontextprotocol/inspector node dist/index.js",
 		"lint": "pnpm exec biome lint --write",
 		"format": "pnpm exec biome format --write"
 	},
