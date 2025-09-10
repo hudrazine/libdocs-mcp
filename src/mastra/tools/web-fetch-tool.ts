@@ -4,11 +4,11 @@ import { z } from "zod";
 
 const inputWebFetchSchema = z.object({
 	urls: z
-		.array(z.url())
+		.array(z.httpUrl())
 		.min(1)
 		.max(5)
 		.describe(
-			"URLs to fetch content from (1-5 URLs). " +
+			"HTTP(S) URLs to fetch content from (1-5 URLs). " +
 				"Multiple URLs can be processed simultaneously. " +
 				"Best used with direct article or documentation URLs rather than homepages.",
 		),
@@ -18,13 +18,13 @@ const outputWebFetchSchema = z
 	.object({
 		results: z.array(
 			z.object({
-				url: z.url().describe("The URL of the fetched content."),
+				url: z.httpUrl().describe("The URL of the fetched content."),
 				content: z.string().describe("The extracted content from the web page."),
 			}),
 		),
 		errors: z.array(
 			z.object({
-				url: z.url().describe("The URL that failed to fetch."),
+				url: z.httpUrl().describe("The URL that failed to fetch."),
 				error: z.string().describe("The error message or reason for the failure."),
 			}),
 		),

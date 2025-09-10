@@ -6,7 +6,7 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 // to maintain compatibility with the MCP schema definition.
 import { z } from "zod-v3";
 
-import * as pkg from "../package.json";
+import pkg from "../package.json";
 import { mastra } from "./mastra";
 
 const server = new McpServer({

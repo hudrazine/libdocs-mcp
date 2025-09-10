@@ -12,12 +12,16 @@ const inputWebSearchSchema = z.object({
 				"When searching for recent or current information, include the actual current year " +
 				"in your query to get the most relevant results (e.g., 'AI developments 2025' instead of 'latest AI developments').",
 		),
-	maxResults: z
+	maxResults: z.coerce
 		.number()
+		.int()
 		.min(1)
 		.max(20)
 		.optional()
-		.default(process.env.LIBDOCS_WEB_SEARCH_LIMIT || 10)
+		.default(() => {
+			const n = Number(process.env.LIBDOCS_WEB_SEARCH_LIMIT ?? 10);
+			return Number.isFinite(n) && n >= 1 && n <= 20 ? n : 10;
+		})
 		.describe(
 			"Number of search results to return (default: 10). Higher values provide more context, lower values focus on best matches.",
 		),

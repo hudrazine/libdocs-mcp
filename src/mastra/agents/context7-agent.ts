@@ -49,7 +49,6 @@ EXECUTION WORKFLOW:
 		- searchTerm
 		- Selected libraryId
 		- trustScore and snippetCount for reference
-	- Maintain cache size limit (15 entries max, remove oldest if needed)
 
 4. Documentation Retrieval
 	- Execute \`context7_get-library-docs\` with resolved/cached ID
@@ -121,11 +120,39 @@ ERROR: [Error Type] - [Specific Details]
 
 CACHE MANAGEMENT STRATEGY:
 
-- **Cache Priority**: Always check cache before API calls to minimize latency
+- **Cache Priority**: Always check cache before tool calls to minimize latency
 - **Cache Metadata**: Store trustScore and snippetCount to justify selection decisions
-- **LRU Cache Management**: Maximum 15 entries, newest first, oldest removed when full
+- **Append-Only Behavior**: Append new resolutions (searchTerm, libraryId, optional trustScore/snippetCount) to the cache
 - **Version Handling**: Cache version-specific IDs separately when versions are explicitly requested
 `;
+
+const libraryCacheSchema = z.object({
+	libraryCache: z
+		.array(
+			z.object({
+				searchTerm: z.string().trim().describe("Search keyword used for cache matching"),
+				libraryId: z.string().trim().describe("Context7 library ID (format: /org/project or /org/project/version)"),
+				trustScore: z.number().optional().describe("Library trust score (0-10, higher is more authoritative)"),
+				snippetCount: z.number().optional().describe("Number of available code snippets for this library"),
+			}),
+		)
+		.transform((entries) => {
+			// Deduplicate by libraryId, keeping only the most recent entry for each unique library
+			const seenLibraryIds = new Set<string>();
+			return entries
+				.reverse()
+				.filter((entry) => {
+					if (seenLibraryIds.has(entry.libraryId)) {
+						return false;
+					}
+					seenLibraryIds.add(entry.libraryId);
+					return true;
+				})
+				.slice(0, 10)
+				.reverse();
+		})
+		.describe("Deduplicated library cache entries (max 10 unique library IDs)"),
+});
 
 export const Context7Agent = new Agent({
 	name: "Context7 Agent",
@@ -155,19 +182,7 @@ export const Context7Agent = new Agent({
 			workingMemory: {
 				enabled: true,
 				scope: "resource",
-				schema: z.object({
-					libraryCache: z
-						.array(
-							z.object({
-								searchTerm: z.string().describe("Search keyword used for cache matching"),
-								libraryId: z.string().describe("Context7 library ID (format: /org/project or /org/project/version)"),
-								trustScore: z.number().optional().describe("Library trust score (0-10, higher is more authoritative)"),
-								snippetCount: z.number().optional().describe("Number of available code snippets for this library"),
-							}),
-						)
-						.max(15)
-						.describe("LRU cache of resolved library IDs (newest first, max 15 entries)"),
-				}),
+				schema: libraryCacheSchema,
 			},
 		},
 	}),

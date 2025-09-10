@@ -4,12 +4,12 @@
  */
 export function getDateContext(): string {
 	const now = new Date();
-	const dateContext = `
-
+	const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone ?? "UTC";
+	// Format local date in the resolved timezone; en-CA -> YYYY-MM-DD
+	const localDate = now.toLocaleDateString("en-CA", { timeZone });
+	return `
 <temporal_context>
-Current Date: ${now.toISOString().split("T")[0]}
-Timezone: ${Intl.DateTimeFormat().resolvedOptions().timeZone}
+Current Date: ${localDate}
+Timezone: ${timeZone}
 </temporal_context>`;
-
-	return dateContext;
 }

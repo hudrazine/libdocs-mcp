@@ -51,7 +51,6 @@ EXECUTION WORKFLOW:
 			- searchTerm
 			- Selected repository
 			- stars and description for reference
-		- Maintain cache size limit (15 entries max, LRU)
 	- If exact owner/repo format provided:
 		- Use it directly, skip to Step 4
 
@@ -166,11 +165,39 @@ Repository: [owner/repo]
 
 CACHE MANAGEMENT STRATEGY:
 
-- **Cache Priority**: Check cache before API calls to reduce latency
-- **LRU Management**: Evict least recently used entries when cache full (15 max)
-- **Search Term Matching**: Cache by search keywords for efficient reuse
-- **Documentation Structure**: Cache topic structure for navigation efficiency
+- **Cache Priority**: Check cache before tool calls to reduce latency
+- **Append-Only Behavior**: Append new resolutions (searchTerm, repository, optional stars/description) to the cache
+- **Version Handling**: Cache repository-specific entries separately when different search terms resolve to the same repository
 `;
+
+const repositoryCacheSchema = z.object({
+	repositoryCache: z
+		.array(
+			z.object({
+				searchTerm: z.string().trim().describe("Search keyword used for cache matching"),
+				repository: z.string().trim().describe("GitHub repository in owner/repo format"),
+				stars: z.number().optional().describe("Repository star count for reference"),
+				description: z.string().nullable().optional().describe("Repository description"),
+				topicStructure: z.string().optional().describe("Cached documentation topics from deepwiki_read_wiki_structure"),
+			}),
+		)
+		.transform((entries) => {
+			// Deduplicate by repository, keeping only the most recent entry for each unique repository
+			const seenRepositories = new Set<string>();
+			return entries
+				.reverse()
+				.filter((entry) => {
+					if (seenRepositories.has(entry.repository)) {
+						return false;
+					}
+					seenRepositories.add(entry.repository);
+					return true;
+				})
+				.slice(0, 10)
+				.reverse();
+		})
+		.describe("Deduplicated repository cache entries (max 15 unique repositories)"),
+});
 
 export const DeepWikiAgent = new Agent({
 	name: "DeepWiki Agent",
@@ -184,9 +211,9 @@ export const DeepWikiAgent = new Agent({
 	tools: async ({ mastra }) => {
 		try {
 			const deepwikiTools = await deepwikiMcp.getTools();
-			// Exclude any tool that contains 'read_wiki_contents' in its name as it's not used in the workflow
+			// Exclude specific deprecated tool by exact name
 			const filteredDeepwikiTools = Object.fromEntries(
-				Object.entries(deepwikiTools).filter(([toolName]) => !toolName.includes("read_wiki_contents")),
+				Object.entries(deepwikiTools).filter(([toolName]) => toolName !== "deepwiki_read_wiki_contents"),
 			);
 			return {
 				...filteredDeepwikiTools,
@@ -210,23 +237,7 @@ export const DeepWikiAgent = new Agent({
 			workingMemory: {
 				enabled: true,
 				scope: "resource",
-				schema: z.object({
-					repositoryCache: z
-						.array(
-							z.object({
-								searchTerm: z.string().describe("Search keyword used for cache matching"),
-								repository: z.string().describe("GitHub repository in owner/repo format"),
-								stars: z.number().optional().describe("Repository star count for reference"),
-								description: z.string().nullable().optional().describe("Repository description"),
-								topicStructure: z
-									.string()
-									.optional()
-									.describe("Cached documentation topics from deepwiki_read_wiki_structure"),
-							}),
-						)
-						.max(15)
-						.describe("LRU cache of resolved repositories (newest first, max 15 entries)"),
-				}),
+				schema: repositoryCacheSchema,
 			},
 		},
 	}),
