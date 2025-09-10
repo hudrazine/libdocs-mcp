@@ -9,11 +9,13 @@
 		"ignoreUnknown": false
 	},
 	"formatter": {
+		"includes": ["**", "!.mastra/**", "!dist/**", "!.temp/**"],
 		"enabled": true,
 		"indentStyle": "tab",
 		"lineWidth": 120
 	},
 	"linter": {
+		"includes": ["**", "!.mastra/**", "!dist/**", "!.temp/**"],
 		"enabled": true,
 		"rules": {
 			"recommended": true
