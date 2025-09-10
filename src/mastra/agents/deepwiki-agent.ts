@@ -167,7 +167,6 @@ CACHE MANAGEMENT STRATEGY:
 
 - **Cache Priority**: Check cache before tool calls to reduce latency
 - **Append-Only Behavior**: Append new resolutions (searchTerm, repository, optional stars/description) to the cache
-- **Version Handling**: Cache repository-specific entries separately when different search terms resolve to the same repository
 `;
 
 const repositoryCacheSchema = z.object({
@@ -181,10 +180,13 @@ const repositoryCacheSchema = z.object({
 				topicStructure: z.string().optional().describe("Cached documentation topics from deepwiki_read_wiki_structure"),
 			}),
 		)
+		.default([])
 		.transform((entries) => {
+			if (entries.length === 0) return entries;
+
 			// Deduplicate by repository, keeping only the most recent entry for each unique repository
 			const seenRepositories = new Set<string>();
-			return entries
+			return [...entries]
 				.reverse()
 				.filter((entry) => {
 					if (seenRepositories.has(entry.repository)) {
@@ -196,7 +198,7 @@ const repositoryCacheSchema = z.object({
 				.slice(0, 10)
 				.reverse();
 		})
-		.describe("Deduplicated repository cache entries (max 15 unique repositories)"),
+		.describe("Deduplicated repository cache entries (max 10 unique repositories)"),
 });
 
 export const DeepWikiAgent = new Agent({

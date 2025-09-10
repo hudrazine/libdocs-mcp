@@ -132,14 +132,22 @@ const libraryCacheSchema = z.object({
 			z.object({
 				searchTerm: z.string().trim().describe("Search keyword used for cache matching"),
 				libraryId: z.string().trim().describe("Context7 library ID (format: /org/project or /org/project/version)"),
-				trustScore: z.number().optional().describe("Library trust score (0-10, higher is more authoritative)"),
-				snippetCount: z.number().optional().describe("Number of available code snippets for this library"),
+				trustScore: z
+					.number()
+					.min(0)
+					.max(10)
+					.optional()
+					.describe("Library trust score (0-10, higher is more authoritative)"),
+				snippetCount: z.number().int().min(0).optional().describe("Number of available code snippets for this library"),
 			}),
 		)
+		.default([])
 		.transform((entries) => {
+			if (entries.length === 0) return entries;
+
 			// Deduplicate by libraryId, keeping only the most recent entry for each unique library
 			const seenLibraryIds = new Set<string>();
-			return entries
+			return [...entries]
 				.reverse()
 				.filter((entry) => {
 					if (seenLibraryIds.has(entry.libraryId)) {
