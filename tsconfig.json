@@ -11,5 +11,6 @@
 		"outDir": "dist",
 		"resolveJsonModule": true
 	},
-	"include": ["src/**/*", "global.d.ts"]
+	"include": ["src/**/*", "global.d.ts"],
+	"exclude": ["dist", "**/*.test.*", "**/__tests__/**"]
 }
