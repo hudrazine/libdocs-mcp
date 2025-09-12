@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 
@@ -49,7 +51,7 @@ server.registerTool(
 					resource: "library-docs-resource",
 					thread: requestId.toString(),
 				},
-				options: { abortSignal: signal },
+				abortSignal: signal,
 			});
 
 			if (response.error) {
@@ -139,7 +141,7 @@ server.registerTool(
 					resource: "github-repo-resource",
 					thread: requestId.toString(),
 				},
-				options: { abortSignal: signal },
+				abortSignal: signal,
 			});
 
 			if (response.error) {
@@ -226,7 +228,7 @@ server.registerTool(
 
 			const response = await WebResearchAgent.generateVNext(prompt, {
 				maxSteps: 30,
-				options: { abortSignal: signal },
+				abortSignal: signal,
 			});
 
 			if (response.error) {
