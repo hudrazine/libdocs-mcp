@@ -49,27 +49,27 @@
 		"format": "pnpm exec biome format --write"
 	},
 	"dependencies": {
-		"@mastra/core": "^0.16.0",
-		"@mastra/libsql": "^0.14.0",
+		"@mastra/core": "^0.16.3",
+		"@mastra/libsql": "^0.14.1",
 		"@mastra/loggers": "^0.10.11",
-		"@mastra/mcp": "^0.11.4",
-		"@mastra/memory": "^0.14.4",
-		"@modelcontextprotocol/sdk": "^1.17.5",
+		"@mastra/mcp": "^0.12.0",
+		"@mastra/memory": "^0.15.1",
+		"@modelcontextprotocol/sdk": "^1.18.0",
 		"@openrouter/ai-sdk-provider": "^1.2.0",
-		"@tavily/core": "^0.5.11",
+		"@tavily/core": "^0.5.12",
 		"octokit": "^5.0.3",
-		"pino": "^9.9.4",
+		"pino": "^9.9.5",
 		"pino-pretty": "^13.1.1",
-		"zod": "^4.1.5",
+		"zod": "^4.1.8",
 		"zod-v3": "npm:zod@3.25.76"
 	},
 	"devDependencies": {
-		"@biomejs/biome": "2.2.2",
+		"@biomejs/biome": "2.2.4",
 		"@dotenvx/dotenvx": "^1.49.0",
 		"@types/node": "^24.3.1",
-		"lefthook": "^1.12.3",
-		"mastra": "^0.12.0",
-		"tsdown": "^0.14.2",
+		"lefthook": "^1.13.0",
+		"mastra": "^0.12.3",
+		"tsdown": "^0.15.0",
 		"typescript": "^5.9.2"
 	}
 }
