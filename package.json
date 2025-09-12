@@ -1,8 +1,45 @@
 {
 	"name": "libdocs-mcp",
 	"version": "0.0.1",
-	"description": "",
+	"description": "Multi-agent MCP server providing smart documentation lookup, repository analysis, and web research with relevance-focused filtering",
+	"keywords": [
+		"mcp",
+		"mcp-server",
+		"model-context-protocol",
+		"documentation",
+		"ai-agent",
+		"mastra",
+		"context7",
+		"deepwiki",
+		"tavily",
+		"web-research",
+		"repository-analysis",
+		"llm-tools"
+	],
+	"license": "MIT",
+	"author": "Hudrazine <39614590+hudrazine@users.noreply.github.com>",
+	"type": "module",
 	"main": "dist/index.js",
+	"bin": {
+		"libdocs-mcp": "dist/index.js"
+	},
+	"files": [
+		"dist/**/*",
+		"README.md",
+		"LICENSE"
+	],
+	"engines": {
+		"node": ">=22.0.0"
+	},
+	"packageManager": "pnpm@10.15.0",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/hudrazine/libdocs-mcp.git"
+	},
+	"homepage": "https://github.com/hudrazine/libdocs-mcp#readme",
+	"bugs": {
+		"url": "https://github.com/hudrazine/libdocs-mcp/issues"
+	},
 	"scripts": {
 		"dev": "mastra dev",
 		"build": "tsdown",
@@ -11,14 +48,6 @@
 		"lint": "pnpm exec biome lint --write",
 		"format": "pnpm exec biome format --write"
 	},
-	"keywords": [],
-	"author": "",
-	"license": "MIT",
-	"type": "module",
-	"engines": {
-		"node": ">=22.0.0"
-	},
-	"packageManager": "pnpm@10.15.0",
 	"dependencies": {
 		"@mastra/core": "^0.16.0",
 		"@mastra/libsql": "^0.14.0",
