@@ -5,21 +5,21 @@
 [![License](https://img.shields.io/badge/license-MIT-green)](./LICENSE)
 [![TypeScript](https://img.shields.io/badge/TypeScript-Ready-blue)](https://www.typescriptlang.org/)
 
-Multi‑agent MCP server that keeps your LLM focused by returning only the documentation, repository insights, and web intelligence each query truly needs.
+Multi-agent MCP server that keeps your LLM focused by returning only the documentation, repository insights, and web intelligence each query truly needs.
 
-LibDocs inserts three specialized retrieval and reasoning agents between your coding assistant and external knowledge sources (Context7 documentation, DeepWiki repository analysis, and real‑time web research via Tavily). Each agent filters aggressively for relevance, structures results, and minimizes token overhead—improving information purity, lowering cost and latency variance, and sustaining longer productive sessions.
+LibDocs inserts three specialized retrieval and reasoning agents between your coding assistant and external knowledge sources (Context7 documentation, DeepWiki repository analysis, and real-time web research via Tavily). Each agent filters aggressively for relevance, structures results, and minimizes token overhead—improving information purity, lowering cost and latency variance, and sustaining longer productive sessions.
 
 ## ✨ Features
 
 - Smart Documentation Lookup (Context7)
 
-  - Relevance‑first filtering and summarization
+  - Relevance-first filtering and summarization
   - Library resolution with cache and version awareness
-  - Token‑aware, structured results
+  - Token-aware, structured results
 
 - Intelligent Repository Analysis (DeepWiki)
 
-  - Repo discovery and topic‑guided Q&A
+  - Repo discovery and topic-guided Q&A
   - Focused architecture and implementation insights
   - Clear partial/warning handling and retry logic
 
@@ -124,12 +124,12 @@ Conducts comprehensive web research across multiple sources with structured synt
 ### Context7 Agent (Smart Documentation Lookup)
 
 - Background
-  - Context7’s default large token retrieval can overfill LLM context windows and include low‑relevance content. The agent sits between your coding agent and Context7 to deliver only what the query needs.
+  - Context7's default large token retrieval can overfill LLM context windows and include low-relevance content. The agent sits between your coding agent and Context7 to deliver only what the query needs.
 - Workflow
-  - Library ID resolution with cache (prefers exact name → trust score → snippet count); version‑aware
+  - Library ID resolution with cache (prefers exact name → trust score → snippet count); version-aware
   - Focused retrieval with a single retry on failure
   - Structured output with source attribution and consistent success/partial/error formats
-  - Token‑aware memory limits to prevent runaway accumulation
+  - Token-aware memory limits to prevent runaway accumulation
 - Error handling
   - Clear messages for not found, multiple matches (selection rationale), retrieval failures (single retry), and partial content warnings
 
@@ -138,9 +138,9 @@ Conducts comprehensive web research across multiple sources with structured synt
 - Background
   - Helps target the right repo and topics, then synthesizes focused insights without flooding the context window.
 - Workflow
-  - Repository discovery with cache (when owner/repo not provided) using stars/relevance/non‑fork criteria
+  - Repository discovery with cache (when owner/repo not provided) using stars/relevance/non-fork criteria
   - Documentation structure discovery via DeepWiki and topic mapping
-  - Targeted question formulation and single‑retry retrieval
+  - Targeted question formulation and single-retry retrieval
   - Structured Markdown output with repository attribution and partial/warning handling
 - Error handling
   - Explicit errors for discovery, availability, and structure retrieval; graceful partial results
@@ -148,13 +148,13 @@ Conducts comprehensive web research across multiple sources with structured synt
 ### Web Research Agent (Comprehensive Web Research)
 
 - Background
-  - Provides up‑to‑date findings from the open web while minimizing context usage.
+  - Provides up-to-date findings from the open web while minimizing context usage.
 - Workflow
-  - Broad‑to‑narrow searches (concise queries), `web_fetch` deep dives, documented search trail
+  - Broad-to-narrow searches (concise queries), `web_fetch` deep dives, documented search trail
   - Structured synthesis: Executive Summary → Key Findings (with citations) → Detailed Analysis → Source Quality Notes → Further Investigation
-  - Quality and ethics: short quotes, neutrality, privacy safeguards, self‑verification checklist
+  - Quality and ethics: short quotes, neutrality, privacy safeguards, self-verification checklist
 - Error handling
-  - Clear notes on uncertainty/conflicts, and explicit partial‑coverage warnings
+  - Clear notes on uncertainty/conflicts, and explicit partial-coverage warnings
 
 ## 🔧 Troubleshooting
 
