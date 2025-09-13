@@ -3,8 +3,6 @@ name: TypeScript Type Check
 on:
   pull_request:
     branches: [main, develop]
-  push:
-    branches: [main, develop]
 
 permissions:
   contents: read
@@ -25,13 +23,15 @@ jobs:
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
         with:
-          version: 10.15.0
+          package_json_path: package.json
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 22.x
+          check-latest: true
           cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile

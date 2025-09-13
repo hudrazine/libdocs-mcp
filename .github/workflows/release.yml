@@ -1,0 +1,126 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to publish (e.g., 0.1.0). If empty, uses tag or package.json"
+        required: false
+        default: ""
+      npm_tag:
+        description: "Optional npm dist-tag (e.g., next, rc). Leave empty for latest."
+        required: false
+        default: ""
+
+permissions:
+  contents: write
+  id-token: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  publish:
+    name: Publish to npm
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          package_json_path: package.json
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          check-latest: true
+          registry-url: https://registry.npmjs.org
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Resolve version (tag > input > package.json)
+        id: v
+        shell: bash
+        run: |
+          if [ "$GITHUB_REF_TYPE" = "tag" ]; then
+            VERS="${GITHUB_REF_NAME#v}"
+          elif [ -n "${{ inputs.version }}" ]; then
+            VERS="${{ inputs.version }}"
+          else
+            VERS=$(jq -r .version package.json)
+          fi
+          echo "PKG_VERSION=$VERS" >> "$GITHUB_OUTPUT"
+
+      - name: Set package version (without git tag)
+        run: npm pkg set version=${{ steps.v.outputs.PKG_VERSION }}
+
+      - name: Check if version already exists on npm
+        id: exists
+        shell: bash
+        run: |
+          PKG_NAME=$(jq -r .name package.json)
+          PKG_VER=${{ steps.v.outputs.PKG_VERSION }}
+          if npm view "$PKG_NAME@$PKG_VER" version > /dev/null 2>&1; then
+            echo "already=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "already=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Skip if already published
+        if: steps.exists.outputs.already == 'true'
+        run: echo "Version already published on npm. Skipping."
+
+      # Build is handled by prepack during publish/dry-run
+
+      - name: Dry-run publish
+        if: steps.exists.outputs.already != 'true'
+        env:
+          NPM_CONFIG_PROVENANCE: "true"
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          echo "Verifying npm auth..."
+          npm whoami || { echo "npm token invalid or missing"; exit 1; }
+          if [ -n "${{ inputs.npm_tag }}" ]; then
+            npm publish --dry-run --provenance --access public --tag "${{ inputs.npm_tag }}"
+          else
+            npm publish --dry-run --provenance --access public
+          fi
+
+      - name: Publish to npm
+        if: steps.exists.outputs.already != 'true'
+        env:
+          NPM_CONFIG_PROVENANCE: "true"
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          if [ -n "${{ inputs.npm_tag }}" ]; then
+            npm publish --provenance --access public --tag "${{ inputs.npm_tag }}"
+          else
+            npm publish --provenance --access public
+          fi
+
+      - name: Create GitHub Release (generate notes)
+        if: github.ref_type == 'tag' && steps.exists.outputs.already != 'true'
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          FLAGS="--generate-notes --verify-tag"
+          if [[ "${GITHUB_REF_NAME}" =~ -(alpha|beta|rc)[0-9]*$ || -n "${{ inputs.npm_tag }}" ]]; then
+            FLAGS+=" --prerelease"
+          else
+            FLAGS+=" --latest"
+          fi
+          gh release create "${GITHUB_REF_NAME}" $FLAGS
