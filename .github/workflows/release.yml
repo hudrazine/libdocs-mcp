@@ -21,7 +21,7 @@ permissions:
 
 concurrency:
   group: release-${{ github.ref }}
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   publish:
@@ -59,18 +59,18 @@ jobs:
           elif [ -n "${{ inputs.version }}" ]; then
             VERS="${{ inputs.version }}"
           else
-            VERS=$(node -p "JSON.parse(require('fs').readFileSync('package.json','utf8')).version")
+            VERS=$(jq -r .version package.json)
           fi
           echo "PKG_VERSION=$VERS" >> "$GITHUB_OUTPUT"
 
       - name: Set package version (without git tag)
-        run: pnpm version ${{ steps.v.outputs.PKG_VERSION }} --no-git-tag-version
+        run: npm pkg set version=${{ steps.v.outputs.PKG_VERSION }}
 
       - name: Check if version already exists on npm
         id: exists
         shell: bash
         run: |
-          PKG_NAME=$(node -p "JSON.parse(require('fs').readFileSync('package.json','utf8')).name")
+          PKG_NAME=$(jq -r .name package.json)
           PKG_VER=${{ steps.v.outputs.PKG_VERSION }}
           if npm view "$PKG_NAME@$PKG_VER" version > /dev/null 2>&1; then
             echo "already=true" >> "$GITHUB_OUTPUT"
@@ -82,9 +82,7 @@ jobs:
         if: steps.exists.outputs.already == 'true'
         run: echo "Version already published on npm. Skipping."
 
-      - name: Build for package contents (pre-dry-run)
-        if: steps.exists.outputs.already != 'true'
-        run: pnpm build
+      # Build is handled by prepack during publish/dry-run
 
       - name: Dry-run publish
         if: steps.exists.outputs.already != 'true'
@@ -95,9 +93,9 @@ jobs:
           echo "Verifying npm auth..."
           npm whoami || { echo "npm token invalid or missing"; exit 1; }
           if [ -n "${{ inputs.npm_tag }}" ]; then
-            npm publish --dry-run --access public --tag "${{ inputs.npm_tag }}"
+            npm publish --dry-run --provenance --access public --tag "${{ inputs.npm_tag }}"
           else
-            npm publish --dry-run --access public
+            npm publish --dry-run --provenance --access public
           fi
 
       - name: Publish to npm
@@ -107,9 +105,9 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
           if [ -n "${{ inputs.npm_tag }}" ]; then
-            npm publish --access public --tag "${{ inputs.npm_tag }}"
+            npm publish --provenance --access public --tag "${{ inputs.npm_tag }}"
           else
-            npm publish --access public
+            npm publish --provenance --access public
           fi
 
       - name: Create GitHub Release (generate notes)
@@ -118,7 +116,7 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
         run: |
           FLAGS="--generate-notes --verify-tag"
-          if [[ "${GITHUB_REF_NAME}" == *"-"* || -n "${{ inputs.npm_tag }}" ]]; then
+          if [[ "${GITHUB_REF_NAME}" =~ -(alpha|beta|rc)[0-9]*$ || -n "${{ inputs.npm_tag }}" ]]; then
             FLAGS+=" --prerelease"
           else
             FLAGS+=" --latest"
