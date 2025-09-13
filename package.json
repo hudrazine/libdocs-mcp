@@ -47,7 +47,11 @@
 		"inspector": "pnpm run build && dotenvx run -- pnpm dlx @modelcontextprotocol/inspector node dist/index.js",
 		"typecheck": "tsc --noEmit",
 		"lint": "pnpm exec biome lint --write",
-		"format": "pnpm exec biome format --write"
+		"format": "pnpm exec biome format --write",
+		"prepack": "pnpm build"
+	},
+	"publishConfig": {
+		"access": "public"
 	},
 	"dependencies": {
 		"@mastra/core": "^0.16.3",
