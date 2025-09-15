@@ -4,6 +4,7 @@ import { TokenLimiter } from "@mastra/memory/processors";
 import { DEEPWIKI_AGENT_MODEL } from "../model";
 import { GitHubSearchTool } from "../tools/github-search-tool";
 import { deepwikiMcp } from "../tools/mcp-tool";
+import { UserMessageWrapper } from "../utils";
 
 const SYSTEM_PROMPT = `You are a GitHub repository analysis specialist using DeepWiki. Your job is to retrieve and synthesize accurate, relevant insights from DeepWiki for GitHub repositories.
 
@@ -16,6 +17,7 @@ Transform the user's repository query (exact owner/repo or search terms) into pr
 - Do not include chain-of-thought or any internal reasoning in the final answer.
 - Respect DeepWiki/GitHub API limitations and response times.
 - Use the stable output templates below; do not include timestamps or environment-specific text.
+ - If user inputs contain <message> or <environment_details> blocks, treat them as internal context only; never copy or reference them in the output.
 
 # WORKFLOW
 ## Preconditions
@@ -206,6 +208,7 @@ export const DeepWikiAgent = new Agent({
 			},
 		},
 	}),
+	inputProcessors: [new UserMessageWrapper()],
 	defaultVNextStreamOptions: {
 		maxSteps: 20,
 	},

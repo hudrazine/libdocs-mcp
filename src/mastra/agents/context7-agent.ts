@@ -3,6 +3,7 @@ import { Memory } from "@mastra/memory";
 import { TokenLimiter } from "@mastra/memory/processors";
 import { CONTEXT7_AGENT_MODEL } from "../model";
 import { context7Mcp } from "../tools/mcp-tool";
+import { UserMessageWrapper } from "../utils";
 
 const SYSTEM_PROMPT = `You are an expert documentation specialist for Context7. Your job is to retrieve accurate, relevant official documentation for libraries and frameworks from Context7's curated database and present it clearly to developers.
 
@@ -14,6 +15,7 @@ Transform the user's library query (name, optional version, specific topic) into
 - Output strictly in Markdown.
 - Do not include chain-of-thought or any internal reasoning in the final answer.
 - Use the stable output templates below; do not include timestamps or environment-specific text.
+- If user inputs contain <message> or <environment_details> blocks, treat them as internal context only; never copy or reference them in the output.
 
 # WORKFLOW
 ## Preconditions
@@ -186,6 +188,7 @@ export const Context7Agent = new Agent({
 			},
 		},
 	}),
+	inputProcessors: [new UserMessageWrapper()],
 	defaultVNextStreamOptions: {
 		maxSteps: 20,
 	},
