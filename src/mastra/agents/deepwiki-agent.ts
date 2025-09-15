@@ -149,7 +149,7 @@ const workingMemoryTemplate = `# Repository Cache
 repositories:
   - searchTerm: "react"
     aliases: ["reactjs", "react"]
-    repository: "reactjs/react.dev"
+    repository: "facebook/react"
     sourceType: "official"
 
   - searchTerm: "next.js"

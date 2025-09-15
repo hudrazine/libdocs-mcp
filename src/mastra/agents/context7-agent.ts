@@ -132,7 +132,7 @@ const workingMemoryTemplate = `# Library Cache
 libraries:
   - searchTerm: "react"
     aliases: ["reactjs", "react"]
-    libraryId: "/reactjs/react.dev"
+    libraryId: "/websites/react_dev"
     sourceType: "official"
     trustScore: 10
     snippetCount: 2127
