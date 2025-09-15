@@ -9,10 +9,9 @@ import { getCurrentDateTimeZone } from "./date";
  *
  * @returns A string containing the environment details in XML-like format.
  */
-export function getEnvironmentDetails(): string {
-	const localTime = getCurrentDateTimeZone();
-
-	return `<environment_details>\n# Current Time\n${localTime}\n</environment_details>`;
+export function getEnvironmentDetails(now: Date = new Date()): string {
+	const localTime = getCurrentDateTimeZone(now);
+	return `<environment_details>\n<current_time>${localTime}</current_time>\n</environment_details>`;
 }
 
 /**
@@ -25,8 +24,8 @@ export function getEnvironmentDetails(): string {
  * @param message - The main message content to wrap.
  * @returns A combined string containing the message and environment details.
  */
-export function wrapMessage(message: string): string {
+export function wrapMessage(message: string, now: Date = new Date()): string {
 	const query = `<message>\n${message}\n</message>`;
-	const environmentDetails = getEnvironmentDetails();
+	const environmentDetails = getEnvironmentDetails(now);
 	return `${query}\n\n${environmentDetails}`;
 }

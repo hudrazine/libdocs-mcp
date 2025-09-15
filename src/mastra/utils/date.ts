@@ -1,12 +1,16 @@
 /** Return current date/time formatted with timezone, e.g. "YYYY-MM-DDTHH:mm:ss±HH:MM (TimeZone)". */
-export function getCurrentDateTimeZone(): string {
-	const now = new Date();
-	const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
-	return `${formatDateToISOString(now)} (${timeZone})`;
+export function getCurrentDateTimeZone(now: Date = new Date()): string {
+	let timeZone = "UTC";
+	try {
+		timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone ?? "UTC";
+	} catch {
+		// Fallback to UTC label if Intl is unavailable or fails
+	}
+	return `${formatDateTimeWithOffset(now)} (${timeZone})`;
 }
 
 /** Format a Date as "YYYY-MM-DDTHH:mm:ss±HH:MM". */
-export function formatDateToISOString(date: Date): string {
+export function formatDateTimeWithOffset(date: Date): string {
 	const year = date.getFullYear();
 	const month = String(date.getMonth() + 1).padStart(2, "0");
 	const day = String(date.getDate()).padStart(2, "0");

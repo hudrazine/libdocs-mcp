@@ -15,7 +15,7 @@ import { wrapMessage } from "./context";
  * @implements {Processor}
  */
 export class UserMessageWrapper implements Processor {
-	readonly name = "message-wrapper";
+	readonly name = "user-message-wrapper";
 
 	/**
 	 * Process input messages by wrapping text parts of user messages.
@@ -29,15 +29,17 @@ export class UserMessageWrapper implements Processor {
 	 * @returns {MastraMessageV2[]} The same messages array after modification.
 	 */
 	processInput({ messages }: { messages: MastraMessageV2[] }): MastraMessageV2[] {
+		if (!Array.isArray(messages) || messages.length === 0) return messages;
 		messages.forEach((msg) => {
 			if (msg.role !== "user") return;
 			msg.content.parts.forEach((part) => {
-				if (part.type === "text") {
-					part.text = wrapMessage(part.text);
-				}
+				if (part.type !== "text") return;
+				const text = part.text ?? "";
+				// Idempotency: avoid double wrap if already contains markers
+				if (text.includes("<environment_details>") || text.includes("<message>")) return;
+				part.text = wrapMessage(text);
 			});
 		});
-
 		return messages;
 	}
 }

@@ -17,6 +17,7 @@ Transform the user's repository query (exact owner/repo or search terms) into pr
 - Do not include chain-of-thought or any internal reasoning in the final answer.
 - Respect DeepWiki/GitHub API limitations and response times.
 - Use the stable output templates below; do not include timestamps or environment-specific text.
+ - If user inputs contain <message> or <environment_details> blocks, treat them as internal context only; never copy or reference them in the output.
 
 # WORKFLOW
 ## Preconditions
