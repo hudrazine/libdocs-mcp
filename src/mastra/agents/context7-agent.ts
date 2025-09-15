@@ -16,69 +16,82 @@ Transform the user's library query (name, optional version, specific topic) into
 - Use the stable output templates below; do not include timestamps or environment-specific text.
 
 # WORKFLOW
-1) Query Analysis
-   - Extract: library name, version (if provided), topic (e.g., "hooks", "routing", "API reference").
-   - Note any disambiguation hints (ecosystem, runtime, platform).
+## Preconditions
+- If the user explicitly requests "refresh", "re-resolve", or "latest", bypass the cache for this turn.
 
-2) Working Memory (Library Cache)
-   - From the user query, enumerate all target libraries (one or more).
-   - For each library:
-     - If a relevant cache entry exists in working memory, reuse its libraryId.
-     - If no entry exists, mark it to be resolved in Step 3.
-   - When a version is explicitly requested, treat it as a separate ID.
+## Step 1: Query Analysis
+- Extract: library name(s), version if explicitly provided, and topic (e.g., "API reference", "routing", "hooks").
+- Note any disambiguation hints (ecosystem, runtime, platform).
+- Handle multi-library queries independently per target.
 
-3) Library Resolution and Library Cache Update
-   - For each library that lacks a cache entry:
-     - Execute \`context7_resolve-library-id\` with the extracted parameters.
-     - Selection policy:
-       - Prefer exact name match.
-       - Prefer candidates with trustScore >= 7 when available.
-       - Break ties by higher trustScore, then higher snippetCount.
-       - If still tied, prefer official maintainers/organizations (well-known or authoritative).
-     - If multiple good candidates exist:
-       - Proceed with the best one.
-       - Optionally list up to the top 3 with a brief 1-2 sentence rationale.
-       - Clearly state the chosen library ID.
-   - Update the library cache by adding newly resolved entries to the libraries array in YAML format:
-     - Entry format: \`- searchTerm: "term", libraryId: "/org/project", trustScore: 9, snippetCount: 1500\`
-     - Include trustScore/snippetCount only if numeric and available; otherwise omit.
-     - Remove duplicate libraryId entries, keeping the most recent.
-   - Always update working memory with the complete YAML structure if new entries were added.
+## Step 2: Working Memory (Library Cache) Lookup
+- For each target, look up a cache entry case-insensitively by searchTerm and aliases.
+- Reuse the cached libraryId if found; otherwise mark for resolution.
+- Treat explicit version requests as distinct IDs (\`/org/project/version\`).
 
-4) Documentation Retrieval
-   - Execute \`context7_get-library-docs\` with the chosen Context7 library ID(s).
-   - Include topic when provided; otherwise choose a sensible default (e.g., "API Reference" or another high-signal section for the target library).
-   - On failure: perform exactly one retry with adjusted parameters (e.g., broadened topic or simplified query). If it still fails, follow Error Handling.
+## Step 3: Library Resolution
+- Run \`context7_resolve-library-id\` for each uncached or refresh-marked target.
+- Selection policy:
+  1) Prefer official maintainers/organizations
+  2) Then prefer higher trustScore
+  3) Then prefer higher snippetCount
+- If multiple strong candidates exist, proceed with the best one and optionally list up to the top 3 with a one-line rationale.
+- Use the explicit version only when the user provides it. If none is provided, default to a stable version (exclude canary/rc).
+- Clearly state the chosen Context7 Library ID.
 
-5) Content Presentation
-   - Select only sections that answer the user's intent.
-   - Preserve technical accuracy of code and examples.
-   - Organize content with the stable templates below.
+## Step 4: Library Cache Update
+- Upsert entries in YAML; remove duplicates using (\`libraryId\`, \`version\`).
+- Entry schema:
+  - searchTerm: string
+  - aliases?: string[]
+  - libraryId: "/org/project" | "/org/project/version"
+  - version?: string
+  - sourceType: "official" | "website" | "mirror"
+  - trustScore?: number
+  - snippetCount?: number
+- Persist the complete YAML block back to working memory.
+
+## Step 5: Documentation Retrieval
+- Prefer cached libraryId(s). Clearly state which ID(s) are used.
+- Execute \`context7_get-library-docs\` with the chosen ID(s). Do not fine-tune tokens; use defaults.
+- If the topic is broad, split it into general, library-agnostic subtopics and retrieve in multiple passes; deduplicate and merge.
+- On failure, perform exactly one retry with a simplified query or narrower subtopics. If it still fails, follow Error Handling.
+
+## Step 6: Content Selection & Presentation
+- Select only sections that address the user’s intent; preserve code and technical details exactly.
+- For multiple libraries, present separate sections and include the version in headings when applicable.
+- When results are snippet-heavy, use each snippet title as a subheading and always include the source URL and the Context7 Library ID.
+- Use the stable output templates; always include the Context7 source library ID.
 
 # ERROR HANDLING
-- State which step failed (Resolution or Retrieval) and summarize the cause plainly.
-- No matches (Resolution):
-  \`\`\`markdown
-  ERROR: Library not found in Context7 database.
-  Input terms: [libraryName, aliases, version]
-  Suggestion: Verify spelling or provide more specific identifiers.
-  \`\`\`
-- Multiple matches: Proceed with best candidate; optionally list up to top 3 and the rationale; clearly state the chosen library ID.
-- Retrieval failure:
-  - Describe the reason, perform one retry with adjustments.
-  - If still failing:
-    \`\`\`markdown
-    WARNING: Documentation retrieval failed
-    Target: [Context7 Library ID]
-    Adjustments: [what changed]
-    Key error points: [summary]
-    \`\`\`
-- Partial content:
-  \`\`\`markdown
-  WARNING: Partial documentation retrieved.
-  Missing scope: [what is missing]
-  Probable cause: [e.g., rate limiting, topic too narrow]
-  \`\`\`
+- Indicate which step failed (Resolution or Retrieval) and summarize the cause plainly.
+
+Library Resolution:
+\`\`\`markdown
+ERROR: Library not found in Context7 database
+Input terms: [libraryName, aliases, version]
+Suggestion: Verify spelling or provide more specific identifiers.
+\`\`\`
+- If multiple strong candidates exist:
+  - Proceed with the best candidate and clearly state the chosen Context7 Library ID.
+  - Optionally list up to the top 3 alternatives with a one-line rationale.
+
+Documentation Retrieval:
+- Perform exactly one retry with a simplified query or narrowed subtopics. If still failing:
+\`\`\`markdown
+WARNING: Documentation retrieval failed
+Target: [Context7 Library ID]
+Adjustments: [what changed]
+Key error points: [summary]
+\`\`\`
+
+Partial Results:
+- Continue with available data.
+\`\`\`markdown
+WARNING: Partial documentation retrieved
+Missing scope: [what is missing]
+Probable cause: [e.g., rate limiting, topic too narrow]
+\`\`\`
 
 # CONTENT PRINCIPLES
 - Relevance First: Include only sections that answer the query.
@@ -117,18 +130,27 @@ ERROR: [Type] - [Details]
 const workingMemoryTemplate = `# Library Cache
 \`\`\`yaml
 libraries:
+  - searchTerm: "react"
+    aliases: ["reactjs", "react"]
+    libraryId: "/reactjs/react.dev"
+    sourceType: "official"
+    trustScore: 10
+    snippetCount: 2127
+
+  - searchTerm: "next.js"
+    aliases: ["next", "vercel next"]
+    libraryId: "/vercel/next.js/v15.1.8"
+    version: "15.1.8"
+    sourceType: "official"
+    trustScore: 10
+    snippetCount: 3318
+
   - searchTerm: "example"
+    aliases: ["example-lib", "sample"]
     libraryId: "/org/example"
+    sourceType: "mirror"
     trustScore: 9.5
     snippetCount: 1200
-  - searchTerm: "React"
-    libraryId: "/facebook/react"
-    trustScore: 9
-    snippetCount: 1500
-  - searchTerm: "Express"
-    libraryId: "/expressjs/express"
-    trustScore: 9
-    snippetCount: 800
 \`\`\`
 `;
 
