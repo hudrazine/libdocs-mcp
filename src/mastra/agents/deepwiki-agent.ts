@@ -4,6 +4,7 @@ import { TokenLimiter } from "@mastra/memory/processors";
 import { DEEPWIKI_AGENT_MODEL } from "../model";
 import { GitHubSearchTool } from "../tools/github-search-tool";
 import { deepwikiMcp } from "../tools/mcp-tool";
+import { UserMessageWrapper } from "../utils";
 
 const SYSTEM_PROMPT = `You are a GitHub repository analysis specialist using DeepWiki. Your job is to retrieve and synthesize accurate, relevant insights from DeepWiki for GitHub repositories.
 
@@ -206,6 +207,7 @@ export const DeepWikiAgent = new Agent({
 			},
 		},
 	}),
+	inputProcessors: [new UserMessageWrapper()],
 	defaultVNextStreamOptions: {
 		maxSteps: 20,
 	},

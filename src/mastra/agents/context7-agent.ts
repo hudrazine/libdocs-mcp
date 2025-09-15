@@ -3,6 +3,7 @@ import { Memory } from "@mastra/memory";
 import { TokenLimiter } from "@mastra/memory/processors";
 import { CONTEXT7_AGENT_MODEL } from "../model";
 import { context7Mcp } from "../tools/mcp-tool";
+import { UserMessageWrapper } from "../utils";
 
 const SYSTEM_PROMPT = `You are an expert documentation specialist for Context7. Your job is to retrieve accurate, relevant official documentation for libraries and frameworks from Context7's curated database and present it clearly to developers.
 
@@ -186,6 +187,7 @@ export const Context7Agent = new Agent({
 			},
 		},
 	}),
+	inputProcessors: [new UserMessageWrapper()],
 	defaultVNextStreamOptions: {
 		maxSteps: 20,
 	},

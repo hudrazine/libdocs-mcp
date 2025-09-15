@@ -2,7 +2,7 @@ import { Agent } from "@mastra/core/agent";
 import { WEB_RESEARCH_MODEL } from "../model";
 import { WebFetchTool } from "../tools/web-fetch-tool";
 import { WebSearchTool } from "../tools/web-search-tool";
-import { getDateContext } from "../utils";
+import { UserMessageWrapper } from "../utils";
 
 const SYSTEM_PROMPT = `You are an advanced web research analyst specializing in conducting thorough, multi-step research through systematic web searches and critical analysis. Your expertise lies in breaking down complex queries, gathering information from authoritative sources, and synthesizing findings into clear, actionable insights.
 
@@ -73,11 +73,10 @@ export const WebResearchAgent = new Agent({
 	id: "web-research-agent",
 	description:
 		"General web research specialist for comprehensive information gathering from multiple online sources. Best suited for: technology news and announcements, library comparisons, tutorials and blog posts, community discussions, troubleshooting guides, and topics not covered by official documentation or repository analysis. Choose this agent when specialized documentation sources are insufficient or when broad web coverage is needed.",
-	instructions: async () => {
-		return SYSTEM_PROMPT + getDateContext();
-	},
+	instructions: SYSTEM_PROMPT,
 	model: WEB_RESEARCH_MODEL,
 	tools: { web_search: WebSearchTool, web_fetch: WebFetchTool },
+	inputProcessors: [new UserMessageWrapper()],
 	defaultVNextStreamOptions: {
 		maxSteps: 30,
 	},
