@@ -6,11 +6,9 @@ const inputWebSearchSchema = z.object({
 	query: z
 		.string()
 		.min(2)
-		.max(100)
+		.max(400)
 		.describe(
-			"The search query or keywords to look up. " +
-				"When searching for recent or current information, include the actual current year " +
-				"in your query to get the most relevant results (e.g., 'AI developments 2025' instead of 'latest AI developments').",
+			"The search query or keywords to look up. For recent or current information, you can include the actual current year in the query for better relevance (e.g., 'AI developments 2025' instead of 'latest AI developments'), or use the timeRange option to filter results by recency.",
 		),
 	maxResults: z.coerce
 		.number()
@@ -25,18 +23,39 @@ const inputWebSearchSchema = z.object({
 		.describe(
 			"Number of search results to return (default: 10). Higher values provide more context, lower values focus on best matches.",
 		),
+	timeRange: z
+		.enum(["day", "week", "month", "year"])
+		.optional()
+		.describe(
+			"Optional time range to filter search results by publication date, starting from the current date. If not specified, results from all time periods are returned. This ensures recent sources for up-to-date queries like news or current events. Valid values: 'day' (last 24 hours), 'week' (last 7 days), 'month' (last 30 days), 'year' (last 365 days).",
+		),
+	includeDomains: z
+		.array(z.string())
+		.max(300)
+		.optional()
+		.describe(
+			"Optional array of domain names to include in search results. Restrict to trusted or specific sources to improve relevance and reduce irrelevant results (maximum 300 domains; keep the list concise and query-relevant, e.g., ['linkedin.com', 'crunchbase.com'] for company background searches). If not specified, results from all domains are returned.",
+		),
+	excludeDomains: z
+		.array(z.string())
+		.max(150)
+		.optional()
+		.describe(
+			"Optional array of domain names to exclude from search results. Filter out unreliable, spammy, or off-topic sources to focus on quality content (maximum 150 domains; keep the list concise, e.g., ['espn.com', 'vogue.com'] for economy trends avoiding sports/fashion sites). If not specified, no domains are excluded.",
+		),
 });
 
 const outputWebSearchSchema = z
 	.array(
 		z.object({
-			url: z.url().describe("The URL of the search result."),
-			title: z.string().describe("The title of the search result."),
-			snippet: z
-				.string()
-				.describe(
-					"A query-relevant excerpt from the web page, not the complete content. For full page content, use the URL with a fetch tool.",
-				),
+			// The URL of the search result
+			url: z.url(),
+			// The title of the search result
+			title: z.string(),
+			// A query-relevant excerpt from the web page, not the complete content. For full page content, use the URL with a fetch tool.
+			snippet: z.string(),
+			// A relevance score for the result, with higher numbers indicating greater relevance to the query.
+			score: z.number(),
 		}),
 	)
 	.or(
@@ -72,6 +91,9 @@ export const WebSearchTool = createTool({
 				searchDepth: "advanced",
 				autoParameters: true,
 				maxResults: context.maxResults,
+				timeRange: context.timeRange,
+				includeDomains: context.includeDomains,
+				excludeDomains: context.excludeDomains,
 			});
 
 			const searchResults = results.map((result) => {
@@ -79,6 +101,7 @@ export const WebSearchTool = createTool({
 					url: result.url,
 					title: result.title,
 					snippet: result.content,
+					score: result.score,
 				};
 			});
 

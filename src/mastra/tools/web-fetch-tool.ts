@@ -8,9 +8,7 @@ const inputWebFetchSchema = z.object({
 		.min(1)
 		.max(5)
 		.describe(
-			"HTTP(S) URLs to fetch content from (1-5 URLs). " +
-				"Multiple URLs can be processed simultaneously. " +
-				"Best used with direct article or documentation URLs rather than homepages.",
+			"HTTP(S) URLs to fetch content from (1-5 URLs). Multiple URLs can be processed simultaneously. Best used with direct article or documentation URLs rather than homepages.",
 		),
 });
 
@@ -18,20 +16,24 @@ const outputWebFetchSchema = z
 	.object({
 		results: z.array(
 			z.object({
-				url: z.httpUrl().describe("The URL of the fetched content."),
-				content: z.string().describe("The extracted content from the web page."),
+				// The URL of the fetched content
+				url: z.httpUrl(),
+				// The extracted content from the web page
+				content: z.string(),
 			}),
 		),
 		errors: z.array(
 			z.object({
-				url: z.httpUrl().describe("The URL that failed to fetch."),
-				error: z.string().describe("The error message or reason for the failure."),
+				// The URL that failed to fetch
+				url: z.httpUrl(),
+				// The error message or reason for the failure
+				error: z.string(),
 			}),
 		),
 	})
 	.or(
 		z.object({
-			error: z.string().describe("Error message when the tool fails to execute."),
+			error: z.string(),
 		}),
 	);
 
@@ -39,6 +41,7 @@ export const WebFetchTool = createTool({
 	id: "web_fetch",
 	description:
 		"Fetch complete content from web pages in a clean, readable format. " +
+		"Extracts the full main content from web pages, filtering out irrelevant elements like ads and pagination as much as possible, though some noise may remain. " +
 		"Use this tool when you need full page content, not just excerpts. " +
 		"Returns successfully fetched content separately from any failed URLs.",
 	inputSchema: inputWebFetchSchema,
