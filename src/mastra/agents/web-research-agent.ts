@@ -94,7 +94,7 @@ export const WebResearchAgent = new Agent({
 	model: WEB_RESEARCH_MODEL,
 	tools: { web_search: WebSearchTool, web_fetch: WebFetchTool },
 	memory: new Memory({
-		processors: [new TokenLimiter({ limit: 200000 })],
+		processors: [new TokenLimiter(200000)],
 	}),
 	inputProcessors: [new UserMessageWrapper()],
 	defaultVNextStreamOptions: {
