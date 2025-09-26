@@ -30,13 +30,15 @@ const inputWebSearchSchema = z.object({
 			"Optional time range to filter search results by publication date, starting from the current date. If not specified, results from all time periods are returned. This ensures recent sources for up-to-date queries like news or current events. Valid values: 'day' (last 24 hours), 'week' (last 7 days), 'month' (last 30 days), 'year' (last 365 days).",
 		),
 	includeDomains: z
-		.array(z.string().min(0).max(300))
+		.array(z.string())
+		.max(300)
 		.optional()
 		.describe(
 			"Optional array of domain names to include in search results. Restrict to trusted or specific sources to improve relevance and reduce irrelevant results (maximum 300 domains; keep the list concise and query-relevant, e.g., ['linkedin.com', 'crunchbase.com'] for company background searches). If not specified, results from all domains are returned.",
 		),
 	excludeDomains: z
-		.array(z.string().min(0).max(150))
+		.array(z.string())
+		.max(150)
 		.optional()
 		.describe(
 			"Optional array of domain names to exclude from search results. Filter out unreliable, spammy, or off-topic sources to focus on quality content (maximum 150 domains; keep the list concise, e.g., ['espn.com', 'vogue.com'] for economy trends avoiding sports/fashion sites). If not specified, no domains are excluded.",
