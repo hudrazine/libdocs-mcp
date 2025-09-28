@@ -75,6 +75,7 @@
 		"lefthook": "^1.13.4",
 		"mastra": "^0.13.2",
 		"tsdown": "^0.15.4",
-		"typescript": "^5.9.2"
+		"typescript": "^5.9.2",
+		"vitest": "^3.2.4"
 	}
 }
