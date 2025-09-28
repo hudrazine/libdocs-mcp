@@ -3,8 +3,9 @@ import { Memory } from "@mastra/memory";
 import { TokenLimiter } from "@mastra/memory/processors";
 import { DEEPWIKI_AGENT_MODEL } from "../model";
 import { GitHubSearchTool } from "../tools/github-search-tool";
+import { LibraryCacheUpdateDeepWikiTool } from "../tools/library-cache-tools";
 import { deepwikiMcp } from "../tools/mcp-tool";
-import { UserMessageWrapper } from "../utils";
+import { LibraryCacheInjector, UserMessageWrapper } from "../utils";
 
 const SYSTEM_PROMPT = `You are a GitHub repository analysis specialist using DeepWiki. Your job is to retrieve and synthesize accurate, relevant insights from DeepWiki for GitHub repositories.
 
@@ -30,10 +31,10 @@ Transform the user's repository query (exact owner/repo or search terms) into pr
 - Support multi-repository requests by listing each repository with its associated topic focus (if provided).
 - Note on version wording: DeepWiki does not support version pinning. If the user mentions versions (e.g., \`v6\`, \`19\`), treat them as disambiguation keywords for topic selection and question phrasing rather than selecting branches or tags.
 
-## Step 2: Working Memory (Repository Cache) Lookup
-- Treat working memory as a minimal, volatile cache.
-- Case-insensitive lookup by searchTerm and aliases.
-- If a repository is cached, reuse it for this turn (unless Preconditions dictate bypass).
+## Step 2: Repository Cache Lookup
+- Read the &lt;system-reminder&gt; block at the top of the user message when present. It contains JSON with a 'repositories' array describing cached entries.
+- Match targets case-insensitively by 'searchTerm' or 'aliases' from that JSON payload.
+- Reuse cached repositories when available unless Preconditions require a bypass.
 
 ## Step 3: Repository Validation
 - For each target repository, verify availability in DeepWiki:
@@ -41,14 +42,9 @@ Transform the user's repository query (exact owner/repo or search terms) into pr
   - If multiple repositories were inferred from search terms, validate candidates and proceed with the best-matching repository (prefer official orgs; avoid obvious forks when possible).
 - On validation failure, follow Error Handling (Repository not found).
 
-## Step 4: Repository Cache Update
-- Upsert a minimal YAML entry per repository into working memory.
-- Minimal schema (no time-based fields, no size/eviction policies):
-  - searchTerm (string)
-  - aliases? (string[])
-  - repository (string, "owner/repo")
-  - sourceType ("official" | "mirror")
-- Remove duplicates by "repository" key; keep the most relevant entry.
+- After confirming repository availability or answering targeted questions, call \`library_cache_update_deepwiki\` with the latest DeepWiki data when it changes.
+- Include 'searchTerm', 'repository', 'sourceType', 'resolvedAt' (ISO timestamp), plus any useful 'aliases'.
+- Skip the tool call if the cache already reflects the same repository with an equal or newer timestamp.
 
 ## Step 5: Documentation Retrieval
 - Prefer repositories found via cache (unless bypass).
@@ -146,26 +142,6 @@ Suggestion: [Actionable suggestion]
 \`\`\`
 `;
 
-const workingMemoryTemplate = `# Repository Cache
-\`\`\`yaml
-repositories:
-  - searchTerm: "react"
-    aliases: ["reactjs", "react"]
-    repository: "facebook/react"
-    sourceType: "official"
-
-  - searchTerm: "next.js"
-    aliases: ["next", "vercel next"]
-    repository: "vercel/next.js"
-    sourceType: "official"
-
-  - searchTerm: "example"
-    aliases: ["example-repo", "sample"]
-    repository: "org/example-repo"
-    sourceType: "mirror"
-\`\`\`
-`;
-
 export const DeepWikiAgent = new Agent({
 	name: "DeepWiki Agent",
 	id: "deepwiki-agent",
@@ -185,6 +161,7 @@ export const DeepWikiAgent = new Agent({
 			return {
 				...filteredDeepwikiTools,
 				github_search_repository: GitHubSearchTool,
+				library_cache_update_deepwiki: LibraryCacheUpdateDeepWikiTool,
 			};
 		} catch (error) {
 			const logger = mastra?.getLogger();
@@ -195,20 +172,14 @@ export const DeepWikiAgent = new Agent({
 			// Fallback: provide GitHub search even if DeepWiki is unavailable
 			return {
 				github_search_repository: GitHubSearchTool,
+				library_cache_update_deepwiki: LibraryCacheUpdateDeepWikiTool,
 			};
 		}
 	},
 	memory: new Memory({
 		processors: [new TokenLimiter(120000)], // Limit memory to ~120k tokens
-		options: {
-			workingMemory: {
-				enabled: true,
-				scope: "resource",
-				template: workingMemoryTemplate,
-			},
-		},
 	}),
-	inputProcessors: [new UserMessageWrapper()],
+	inputProcessors: [new UserMessageWrapper(), new LibraryCacheInjector({ kind: "deepwiki" })],
 	defaultVNextStreamOptions: {
 		maxSteps: 20,
 	},

@@ -146,3 +146,4 @@ vite.config.ts.timestamp-*
 # Claude Code
 .claude
 CLAUDE.md
+AGENTS.md
