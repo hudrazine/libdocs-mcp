@@ -44,7 +44,7 @@ Transform the user's repository query (exact owner/repo or search terms) into pr
 - On validation failure, follow Error Handling (Repository not found).
 
 - After confirming repository availability or answering targeted questions, call \`library_cache_update_deepwiki\` with the latest DeepWiki data when it changes.
-- Include a 'names' array (canonical search term first, followed by any aliases), 'repository', 'sourceType', and 'resolvedAt' (ISO timestamp).
+- Include a 'names' array (canonical search term first, followed by any aliases), 'repository', and 'sourceType'; the server will assign the resolution timestamp.
 - Skip the tool call if the cache already reflects the same repository with an equal or newer timestamp.
 
 ## Step 5: Documentation Retrieval

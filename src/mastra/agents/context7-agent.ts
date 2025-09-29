@@ -45,8 +45,8 @@ Transform the user's library query (name, optional version, specific topic) into
 - Clearly state the chosen Context7 Library ID.
 
 - After a successful resolution (and only when new or refreshed data exists), call \`library_cache_update_context7\` with the exact fields returned by Context7.
-- Include a 'names' array (canonical search term first, followed by any aliases), 'libraryId', 'sourceType', 'resolvedAt' (ISO timestamp), plus optional 'trustScore' or 'snippetCount'.
-- Skip the tool call if the cache already reflects the same 'libraryId' with an equal or newer timestamp.
+- Include a 'names' array (canonical search term first, followed by any aliases), 'libraryId', and 'sourceType'; optionally include 'trustScore' or 'snippetCount' when Context7 provides them.
+- Skip the tool call if the cache already reflects the same 'libraryId' with an equal or newer resolution timestamp.
 
 ## Step 5: Documentation Retrieval
 - Prefer cached libraryId(s). Clearly state which ID(s) are used.
