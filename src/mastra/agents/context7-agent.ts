@@ -1,10 +1,11 @@
 import { Agent } from "@mastra/core/agent";
 import { Memory } from "@mastra/memory";
 import { TokenLimiter } from "@mastra/memory/processors";
+import { LibraryCacheInjector } from "../cache/library-cache-injector";
 import { CONTEXT7_AGENT_MODEL } from "../model";
 import { LibraryCacheUpdateContext7Tool } from "../tools/library-cache-tools";
 import { context7Mcp } from "../tools/mcp-tool";
-import { LibraryCacheInjector, UserMessageWrapper } from "../utils";
+import { UserMessageWrapper } from "../utils";
 
 const SYSTEM_PROMPT = `You are an expert documentation specialist for Context7. Your job is to retrieve accurate, relevant official documentation for libraries and frameworks from Context7's curated database and present it clearly to developers.
 
@@ -28,8 +29,8 @@ Transform the user's library query (name, optional version, specific topic) into
 - Handle multi-library queries independently per target.
 
 ## Step 2: Library Cache Lookup
-- Read the &lt;system-reminder&gt; block at the top of the user message when present. It contains JSON with a 'libraries' array describing cached entries.
-- Match targets case-insensitively by 'searchTerm' or 'aliases' in that JSON payload.
+- Read the <system-reminder> block at the top of the user message when present. It contains a JSON array describing cached library entries.
+- Match targets case-insensitively against any value in each entry's 'names' array. Treat 'names[0]' as the canonical lookup term.
 - Reuse cached 'libraryId' values when available unless Preconditions require a bypass.
 - Treat explicit version requests as distinct IDs (\`/org/project/version\`).
 
@@ -44,7 +45,7 @@ Transform the user's library query (name, optional version, specific topic) into
 - Clearly state the chosen Context7 Library ID.
 
 - After a successful resolution (and only when new or refreshed data exists), call \`library_cache_update_context7\` with the exact fields returned by Context7.
-- Include 'searchTerm', 'libraryId', 'sourceType', 'resolvedAt' (ISO timestamp), plus any available 'aliases', 'trustScore', or 'snippetCount'.
+- Include a 'names' array (canonical search term first, followed by any aliases), 'libraryId', 'sourceType', 'resolvedAt' (ISO timestamp), plus optional 'trustScore' or 'snippetCount'.
 - Skip the tool call if the cache already reflects the same 'libraryId' with an equal or newer timestamp.
 
 ## Step 5: Documentation Retrieval

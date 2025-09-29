@@ -1,11 +1,12 @@
 import { Agent } from "@mastra/core/agent";
 import { Memory } from "@mastra/memory";
 import { TokenLimiter } from "@mastra/memory/processors";
+import { LibraryCacheInjector } from "../cache/library-cache-injector";
 import { DEEPWIKI_AGENT_MODEL } from "../model";
 import { GitHubSearchTool } from "../tools/github-search-tool";
 import { LibraryCacheUpdateDeepWikiTool } from "../tools/library-cache-tools";
 import { deepwikiMcp } from "../tools/mcp-tool";
-import { LibraryCacheInjector, UserMessageWrapper } from "../utils";
+import { UserMessageWrapper } from "../utils";
 
 const SYSTEM_PROMPT = `You are a GitHub repository analysis specialist using DeepWiki. Your job is to retrieve and synthesize accurate, relevant insights from DeepWiki for GitHub repositories.
 
@@ -32,8 +33,8 @@ Transform the user's repository query (exact owner/repo or search terms) into pr
 - Note on version wording: DeepWiki does not support version pinning. If the user mentions versions (e.g., \`v6\`, \`19\`), treat them as disambiguation keywords for topic selection and question phrasing rather than selecting branches or tags.
 
 ## Step 2: Repository Cache Lookup
-- Read the &lt;system-reminder&gt; block at the top of the user message when present. It contains JSON with a 'repositories' array describing cached entries.
-- Match targets case-insensitively by 'searchTerm' or 'aliases' from that JSON payload.
+- Read the <system-reminder> block at the top of the user message when present. It contains a JSON array describing cached repository entries.
+- Match targets case-insensitively against any value in each entry's 'names' array. Treat 'names[0]' as the canonical lookup term.
 - Reuse cached repositories when available unless Preconditions require a bypass.
 
 ## Step 3: Repository Validation
@@ -43,7 +44,7 @@ Transform the user's repository query (exact owner/repo or search terms) into pr
 - On validation failure, follow Error Handling (Repository not found).
 
 - After confirming repository availability or answering targeted questions, call \`library_cache_update_deepwiki\` with the latest DeepWiki data when it changes.
-- Include 'searchTerm', 'repository', 'sourceType', 'resolvedAt' (ISO timestamp), plus any useful 'aliases'.
+- Include a 'names' array (canonical search term first, followed by any aliases), 'repository', 'sourceType', and 'resolvedAt' (ISO timestamp).
 - Skip the tool call if the cache already reflects the same repository with an equal or newer timestamp.
 
 ## Step 5: Documentation Retrieval
