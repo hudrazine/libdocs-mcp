@@ -1,7 +1,9 @@
 import { Agent } from "@mastra/core/agent";
 import { Memory } from "@mastra/memory";
 import { TokenLimiter } from "@mastra/memory/processors";
+import { LibraryCacheInjector } from "../cache/library-cache-injector";
 import { CONTEXT7_AGENT_MODEL } from "../model";
+import { LibraryCacheUpdateContext7Tool } from "../tools/library-cache-tools";
 import { context7Mcp } from "../tools/mcp-tool";
 import { UserMessageWrapper } from "../utils";
 
@@ -26,9 +28,10 @@ Transform the user's library query (name, optional version, specific topic) into
 - Note any disambiguation hints (ecosystem, runtime, platform).
 - Handle multi-library queries independently per target.
 
-## Step 2: Working Memory (Library Cache) Lookup
-- For each target, look up a cache entry case-insensitively by searchTerm and aliases.
-- Reuse the cached libraryId if found; otherwise mark for resolution.
+## Step 2: Library Cache Lookup
+- Read the <system-reminder> block at the top of the user message when present. It contains a JSON array describing cached library entries.
+- Match targets case-insensitively against any value in each entry's 'names' array. Treat 'names[0]' as the canonical lookup term.
+- Reuse cached 'libraryId' values when available unless Preconditions require a bypass.
 - Treat explicit version requests as distinct IDs (\`/org/project/version\`).
 
 ## Step 3: Library Resolution
@@ -41,17 +44,9 @@ Transform the user's library query (name, optional version, specific topic) into
 - Use the explicit version only when the user provides it. If none is provided, default to a stable version (exclude canary/rc).
 - Clearly state the chosen Context7 Library ID.
 
-## Step 4: Library Cache Update
-- Upsert entries in YAML; remove duplicates using (\`libraryId\`, \`version\`).
-- Entry schema:
-  - searchTerm: string
-  - aliases?: string[]
-  - libraryId: "/org/project" | "/org/project/version"
-  - version?: string
-  - sourceType: "official" | "website" | "mirror"
-  - trustScore?: number
-  - snippetCount?: number
-- Persist the complete YAML block back to working memory.
+- After a successful resolution (and only when new or refreshed data exists), call \`library_cache_update_context7\` with the exact fields returned by Context7.
+- Include a 'names' array (canonical search term first, followed by any aliases), 'libraryId', and 'sourceType'; optionally include 'trustScore' or 'snippetCount' when Context7 provides them.
+- Skip the tool call if the cache already reflects the same 'libraryId' with an equal or newer resolution timestamp.
 
 ## Step 5: Documentation Retrieval
 - Prefer cached libraryId(s). Clearly state which ID(s) are used.
@@ -129,33 +124,6 @@ ERROR: [Type] - [Details]
 \`\`\`
 `;
 
-const workingMemoryTemplate = `# Library Cache
-\`\`\`yaml
-libraries:
-  - searchTerm: "react"
-    aliases: ["reactjs", "react"]
-    libraryId: "/websites/react_dev"
-    sourceType: "official"
-    trustScore: 10
-    snippetCount: 2127
-
-  - searchTerm: "next.js"
-    aliases: ["next", "vercel next"]
-    libraryId: "/vercel/next.js/v15.1.8"
-    version: "15.1.8"
-    sourceType: "official"
-    trustScore: 10
-    snippetCount: 3318
-
-  - searchTerm: "example"
-    aliases: ["example-lib", "sample"]
-    libraryId: "/org/example"
-    sourceType: "mirror"
-    trustScore: 9.5
-    snippetCount: 1200
-\`\`\`
-`;
-
 export const Context7Agent = new Agent({
 	name: "Context7 Agent",
 	id: "context7-agent",
@@ -167,7 +135,11 @@ export const Context7Agent = new Agent({
 		// NOTE: MCP tool names are prefixed with "context7_" + <tool_name>.
 		// For example: context7_resolve-library-id, context7_get-library-docs
 		try {
-			return await context7Mcp.getTools();
+			const mcpTools = await context7Mcp.getTools();
+			return {
+				...mcpTools,
+				library_cache_update_context7: LibraryCacheUpdateContext7Tool,
+			};
 		} catch (error) {
 			const logger = mastra?.getLogger();
 			logger?.error("Failed to fetch Context7 MCP tools", {
@@ -175,20 +147,15 @@ export const Context7Agent = new Agent({
 				stack: error instanceof Error ? error.stack : undefined,
 			});
 			// Return empty object to allow agent to continue without tools
-			return {};
+			return {
+				library_cache_update_context7: LibraryCacheUpdateContext7Tool,
+			};
 		}
 	},
 	memory: new Memory({
 		processors: [new TokenLimiter(120000)], // Limit memory to ~120k tokens
-		options: {
-			workingMemory: {
-				enabled: true,
-				scope: "resource",
-				template: workingMemoryTemplate,
-			},
-		},
 	}),
-	inputProcessors: [new UserMessageWrapper()],
+	inputProcessors: [new UserMessageWrapper(), new LibraryCacheInjector({ kind: "context7", limit: 10 })],
 	defaultVNextStreamOptions: {
 		maxSteps: 20,
 	},

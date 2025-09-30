@@ -54,27 +54,28 @@
 		"access": "public"
 	},
 	"dependencies": {
-		"@mastra/core": "^0.16.3",
-		"@mastra/libsql": "^0.14.1",
-		"@mastra/loggers": "^0.10.11",
-		"@mastra/mcp": "^0.12.0",
-		"@mastra/memory": "^0.15.1",
-		"@modelcontextprotocol/sdk": "^1.18.0",
+		"@mastra/core": "^0.18.0",
+		"@mastra/libsql": "^0.14.3",
+		"@mastra/loggers": "^0.10.13",
+		"@mastra/mcp": "^0.13.1",
+		"@mastra/memory": "^0.15.3",
+		"@modelcontextprotocol/sdk": "^1.18.2",
 		"@openrouter/ai-sdk-provider": "^1.2.0",
 		"@tavily/core": "^0.5.12",
 		"octokit": "^5.0.3",
-		"pino": "^9.9.5",
+		"pino": "^9.11.0",
 		"pino-pretty": "^13.1.1",
-		"zod": "^4.1.8",
+		"zod": "^4.1.11",
 		"zod-v3": "npm:zod@3.25.76"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "2.2.4",
-		"@dotenvx/dotenvx": "^1.49.0",
-		"@types/node": "^24.3.1",
-		"lefthook": "^1.13.0",
-		"mastra": "^0.12.3",
-		"tsdown": "^0.15.0",
-		"typescript": "^5.9.2"
+		"@dotenvx/dotenvx": "^1.51.0",
+		"@types/node": "^24.5.2",
+		"lefthook": "^1.13.4",
+		"mastra": "^0.13.2",
+		"tsdown": "^0.15.4",
+		"typescript": "^5.9.2",
+		"vitest": "^3.2.4"
 	}
 }
