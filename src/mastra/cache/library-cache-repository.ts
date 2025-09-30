@@ -8,7 +8,7 @@ import {
 } from "./schema";
 
 type LoggerLike = {
-	info: (message: string) => void;
+	info: (message: string, ...args: unknown[]) => void;
 };
 
 type CacheEntryBase = {
@@ -55,7 +55,7 @@ abstract class BaseCacheRepository<Entry extends CacheEntryBase, Input> {
 		for (const key of this.order) {
 			const entry = this.entries.get(key);
 			if (!entry) continue;
-			if (entry.names.some((candidate) => candidate === normalized)) {
+			if (entry.names.some((candidate) => candidate.trim().toLowerCase() === normalized)) {
 				return cloneEntry(entry);
 			}
 		}
@@ -67,23 +67,37 @@ abstract class BaseCacheRepository<Entry extends CacheEntryBase, Input> {
 		const canonical = parsed.names[0];
 		const existingKey = this.resolveExistingKey(canonical, parsed);
 
+		const existing = existingKey ? this.entries.get(existingKey) : undefined;
+		let toStore = parsed;
+		if (existing) {
+			// Merge aliases from existing entry
+			const merged = Array.from(new Set([...(existing.names ?? []), ...parsed.names]));
+			// Ensure canonical is first
+			const canonicalLower = canonical.trim().toLowerCase();
+			const idx = merged.findIndex((n) => n.trim().toLowerCase() === canonicalLower);
+			if (idx > 0) {
+				const [canon] = merged.splice(idx, 1);
+				merged.unshift(canon);
+			}
+			toStore = { ...(parsed as Record<string, unknown>), names: merged } as Entry;
+		}
+
 		if (existingKey && existingKey !== canonical) {
 			this.entries.delete(existingKey);
 			this.removeKey(existingKey);
 		}
 
 		const hadCanonical = this.entries.has(canonical);
-
-		this.entries.set(canonical, cloneEntry(parsed));
+		this.entries.set(canonical, cloneEntry(toStore));
 
 		if (!hadCanonical) {
 			this.order.push(canonical);
 			this.enforceCapacity();
 		}
 
-		this.logger?.info(`library-cache: upsert ${this.kindLabel()} ${canonical} -> ${this.targetIdentifier(parsed)}`);
+		this.logger?.info(`library-cache: upsert ${this.kindLabel()} ${canonical} -> ${this.targetIdentifier(toStore)}`);
 
-		return cloneEntry(parsed);
+		return cloneEntry(toStore);
 	}
 
 	protected abstract kindLabel(): "context7" | "deepwiki";
@@ -91,7 +105,8 @@ abstract class BaseCacheRepository<Entry extends CacheEntryBase, Input> {
 	protected abstract parseInput(input: Input): Entry;
 
 	protected isSameResource(existing: Entry, candidate: Entry): boolean {
-		return existing.names.some((name) => candidate.names.includes(name));
+		const existingNames = new Set(existing.names.map((n) => n.trim().toLowerCase()));
+		return candidate.names.some((n) => existingNames.has(n.trim().toLowerCase()));
 	}
 
 	private resolveExistingKey(canonical: string, entry: Entry): string | null {

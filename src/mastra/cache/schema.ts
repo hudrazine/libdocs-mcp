@@ -1,21 +1,16 @@
 import { z } from "zod";
 
 const namesSchema = z
-	.array(
-		z
-			.string()
-			.trim()
-			.min(1, "Name must not be empty")
-			.transform((value) => value.toLowerCase()),
-	)
+	.array(z.string().trim().min(1, "Name must not be empty"))
 	.min(1, "At least one name is required")
 	.transform((values) => {
 		const unique: string[] = [];
-		const seen = new Set<string>();
+		const seenLower = new Set<string>();
 		for (const value of values) {
-			if (seen.has(value)) continue;
-			unique.push(value);
-			seen.add(value);
+			const key = value.toLowerCase();
+			if (seenLower.has(key)) continue;
+			unique.push(value); // preserve original casing
+			seenLower.add(key);
 		}
 		return unique;
 	})

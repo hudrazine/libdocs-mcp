@@ -180,7 +180,7 @@ export const DeepWikiAgent = new Agent({
 	memory: new Memory({
 		processors: [new TokenLimiter(120000)], // Limit memory to ~120k tokens
 	}),
-	inputProcessors: [new UserMessageWrapper(), new LibraryCacheInjector({ kind: "deepwiki" })],
+	inputProcessors: [new UserMessageWrapper(), new LibraryCacheInjector({ kind: "deepwiki", limit: 10 })],
 	defaultVNextStreamOptions: {
 		maxSteps: 20,
 	},

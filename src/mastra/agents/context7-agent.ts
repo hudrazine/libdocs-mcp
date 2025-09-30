@@ -155,7 +155,7 @@ export const Context7Agent = new Agent({
 	memory: new Memory({
 		processors: [new TokenLimiter(120000)], // Limit memory to ~120k tokens
 	}),
-	inputProcessors: [new UserMessageWrapper(), new LibraryCacheInjector({ kind: "context7" })],
+	inputProcessors: [new UserMessageWrapper(), new LibraryCacheInjector({ kind: "context7", limit: 10 })],
 	defaultVNextStreamOptions: {
 		maxSteps: 20,
 	},
