@@ -23,7 +23,16 @@ server.registerTool(
 	"library_docs_lookup",
 	{
 		title: "Library Documentation Lookup",
-		description: Context7Agent.getDescription(),
+		description: `A specialized tool for retrieving official documentation for libraries and frameworks. It efficiently extracts accurate and reliable information from Context7's curated database.
+
+Optimal use cases:
+- Retrieving API references, SDK guides, or version-specific documentation for libraries and frameworks.
+- Assists developers in quickly accessing precise information from official sources.
+
+Input prompt examples:
+- "Explain React hooks, especially useState usage and internal behavior from official documentation"
+- "Provide details and examples of Express v4 middleware API"
+- "I want to know about Pandas DataFrame methods, particularly for filtering and grouping"`,
 		inputSchema: {
 			prompt: z
 				.string()
@@ -112,7 +121,16 @@ server.registerTool(
 	"github_repo_analyzer",
 	{
 		title: "GitHub Repository Analyzer",
-		description: DeepWikiAgent.getDescription(),
+		description: `A tool providing technical insights into GitHub repositories. It analyzes repository structure and code patterns, supporting deep understanding for specific questions.
+
+Optimal use cases:
+- Exploring repository architecture, implementation details, and design decisions; ideal for codebase-specific queries.
+- Helps developers grasp specific mechanisms within a repository for efficient learning and troubleshooting.
+
+Input prompt examples:
+- "Analyze in detail how component lifecycle is implemented in the facebook/react repository"
+- "Provide an overview of the middleware architecture and key patterns in the Express repository"
+- "Explain the reactivity system in the Vue.js repository, including specific code examples"`,
 		inputSchema: {
 			prompt: z
 				.string()
@@ -202,7 +220,16 @@ server.registerTool(
 	"web_research_assistant",
 	{
 		title: "Web Research Assistant",
-		description: WebResearchAgent.getDescription(),
+		description: `A tool for gathering and synthesizing information from broad web sources. It verifies multiple online resources to provide comprehensive insights.
+
+Optimal use cases:
+- Investigating technology news, market trend analysis, historical facts, travel guides, business strategies, and various other topics.
+- Suitable for diverse information sources outside official documentation or specialized repositories, offering practical knowledge from cross-source perspectives.
+
+Input prompt examples:
+- "Tell me about the 2025 performance comparison between React and Vue, including the latest benchmarks and trends"
+- "Summarize the latest scientific consensus on climate change and its impacts from reliable sources"
+- "Explain best practices for error handling in Node.js production environments, with case studies"`,
 		inputSchema: {
 			prompt: z
 				.string()
