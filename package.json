@@ -1,6 +1,6 @@
 {
 	"name": "libdocs-mcp",
-	"version": "0.0.1",
+	"version": "0.0.2",
 	"description": "Multi-agent MCP server providing smart documentation lookup, repository analysis, and web research with relevance-focused filtering",
 	"keywords": [
 		"mcp",
